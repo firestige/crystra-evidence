@@ -9,15 +9,15 @@ from typing import Any
 
 import pytest
 
-from wsr_evidence.admission.service import AdmissionService, Disposition
-from wsr_evidence.admission.validation import (
+from crystra_evidence.admission.service import AdmissionService, Disposition
+from crystra_evidence.admission.validation import (
     ValidationError,
     canonical_bytes,
     canonical_digest,
     validate_record,
 )
-from wsr_evidence.projection.effects import ProjectionEffect
-from wsr_evidence.storage.postgresql import _accepted_record_values
+from crystra_evidence.projection.effects import ProjectionEffect
+from crystra_evidence.storage.postgresql import _accepted_record_values
 
 
 def finding_record(*, event_id: str = "event-1", target_id: str = "artifact-1") -> dict[str, Any]:

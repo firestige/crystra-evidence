@@ -2,9 +2,9 @@
 
 import uvicorn
 
-from wsr_evidence.app import create_app
-from wsr_evidence.config import RuntimeSettings
-from wsr_evidence.retention.config import RetentionSettings
+from crystra_evidence.app import create_app
+from crystra_evidence.config import RuntimeSettings
+from crystra_evidence.retention.config import RetentionSettings
 
 
 def main() -> None:

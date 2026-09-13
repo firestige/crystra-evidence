@@ -8,8 +8,8 @@ from typing import Any, cast
 
 from psycopg_pool import AsyncConnectionPool
 
-from wsr_evidence.storage.postgresql import PostgresStorage
-from wsr_evidence.storage.read_model import (
+from crystra_evidence.storage.postgresql import PostgresStorage
+from crystra_evidence.storage.read_model import (
     DeliveryDeletionBatch,
     DeliveryDeletionResult,
     ExpiryBatch,

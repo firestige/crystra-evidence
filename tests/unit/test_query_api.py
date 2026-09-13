@@ -5,19 +5,19 @@ from pathlib import Path
 import pytest
 from httpx import ASGITransport, AsyncClient
 
-from wsr_evidence.admission.validation import EVENT_NAMES as ADMISSION_EVENT_NAMES
-from wsr_evidence.app import create_app
-from wsr_evidence.query.faults import SnapshotError, SnapshotFault
-from wsr_evidence.query.model import QueryEffect
-from wsr_evidence.query.postgresql import PostgresQueryReadModel
-from wsr_evidence.query.service import (
+from crystra_evidence.admission.validation import EVENT_NAMES as ADMISSION_EVENT_NAMES
+from crystra_evidence.app import create_app
+from crystra_evidence.query.faults import SnapshotError, SnapshotFault
+from crystra_evidence.query.model import QueryEffect
+from crystra_evidence.query.postgresql import PostgresQueryReadModel
+from crystra_evidence.query.service import (
     EVENT_NAMES,
     WAVE6_INPUT_MANIFEST_SHA256,
     QueryError,
     QueryErrorCode,
     QueryService,
 )
-from wsr_evidence.storage.read_model import (
+from crystra_evidence.storage.read_model import (
     ExpiryRecord,
     ResourceClass,
     RetentionPolicy,

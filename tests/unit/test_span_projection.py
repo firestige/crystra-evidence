@@ -3,8 +3,8 @@ from typing import Any
 
 import pytest
 
-from wsr_evidence.admission.service import AdmissionService
-from wsr_evidence.admission.validation import ValidationError, validate_record
+from crystra_evidence.admission.service import AdmissionService
+from crystra_evidence.admission.validation import ValidationError, validate_record
 
 
 def span_record(

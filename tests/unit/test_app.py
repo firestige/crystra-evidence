@@ -1,7 +1,7 @@
 import pytest
 from httpx import ASGITransport, AsyncClient
 
-from wsr_evidence.app import create_app
+from crystra_evidence.app import create_app
 
 
 @pytest.mark.asyncio

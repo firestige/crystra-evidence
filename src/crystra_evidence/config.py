@@ -31,12 +31,12 @@ class RuntimeSettings:
 
     @classmethod
     def from_environment(cls) -> RuntimeSettings:
-        bind_scope = os.environ.get("WSR_EVIDENCE_BIND_SCOPE", "loopback")
+        bind_scope = os.environ.get("CRYSTRA_EVIDENCE_BIND_SCOPE", "loopback")
         if bind_scope not in {"loopback", "container"}:
             raise ValueError("Evidence bind scope must be loopback or container")
         return cls(
-            host=os.environ.get("WSR_EVIDENCE_HOST", "127.0.0.1"),
-            port=int(os.environ.get("WSR_EVIDENCE_PORT", "4318")),
+            host=os.environ.get("CRYSTRA_EVIDENCE_HOST", "127.0.0.1"),
+            port=int(os.environ.get("CRYSTRA_EVIDENCE_PORT", "4318")),
             bind_scope=cast(Literal["loopback", "container"], bind_scope),
-            database_url=os.environ.get("WSR_EVIDENCE_DATABASE_URL"),
+            database_url=os.environ.get("CRYSTRA_EVIDENCE_DATABASE_URL"),
         )

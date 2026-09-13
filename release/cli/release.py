@@ -35,7 +35,7 @@ class ReleaseError(RuntimeError):
 def assert_configuration(value: dict[str, Any]) -> None:
     if (
         set(value) != CONFIG_KEYS
-        or value.get("schemaVersion") != "wsr.release-component@1.0.0"
+        or value.get("schemaVersion") != "crystra.release-component@1.0.0"
         or value.get("releaseBranch") != "main"
         or not re.fullmatch(r"release/[a-z0-9._-]+", value.get("triggerBranch", ""))
         or value.get("stablePolicy") != "qualified-candidate-exact-assets"
@@ -73,15 +73,15 @@ def verify_manifest(directory: Path) -> str:
         raise ReleaseError("RELEASE_METADATA_INVALID") from error
     if (
         set(manifest) != {"schemaVersion", "version", "ociDigest", "artifacts"}
-        or manifest["schemaVersion"] != "wsr.evidence-release@1.0.0"
+        or manifest["schemaVersion"] != "crystra.evidence-release@1.0.0"
         or not re.fullmatch(r"(?:0|[1-9]\d*)\.(?:0|[1-9]\d*)\.(?:0|[1-9]\d*)", manifest["version"])
         or SHA256.fullmatch(manifest["ociDigest"]) is None
         or not isinstance(manifest["artifacts"], list)
     ):
         raise ReleaseError("RELEASE_METADATA_INVALID")
     expected_names = {
-        f"wsr_evidence-{manifest['version']}-py3-none-any.whl",
-        f"wsr_evidence-{manifest['version']}.tar.gz",
+        f"crystra_evidence-{manifest['version']}-py3-none-any.whl",
+        f"crystra_evidence-{manifest['version']}.tar.gz",
     }
     if {item.get("name") for item in manifest["artifacts"]} != expected_names:
         raise ReleaseError("RELEASE_ARTIFACT_SET_INVALID")
@@ -110,7 +110,7 @@ def build_manifest(directory: Path, oci_digest: str) -> str:
                 {"name": file.name, "bytes": file.stat().st_size, "sha256": _digest(file)}
             )
     manifest = {
-        "schemaVersion": "wsr.evidence-release@1.0.0",
+        "schemaVersion": "crystra.evidence-release@1.0.0",
         "version": version,
         "ociDigest": oci_digest,
         "artifacts": artifacts,

@@ -1,8 +1,8 @@
 #!/bin/sh
 set -eu
 
-database_name="${WSR_EVIDENCE_DATABASE_NAME:?database name is required}"
-secret_file="${WSR_EVIDENCE_DATABASE_PASSWORD_FILE:?database password file is required}"
+database_name="${CRYSTRA_EVIDENCE_DATABASE_NAME:?database name is required}"
+secret_file="${CRYSTRA_EVIDENCE_DATABASE_PASSWORD_FILE:?database password file is required}"
 export PGPASSWORD="$(tr -d '\r\n' < "$secret_file")"
 test -n "$PGPASSWORD"
 state_file="$(mktemp)"
@@ -13,8 +13,8 @@ query() {
   order="$2"
   printf 'table:%s\n' "$table" >> "$state_file"
   psql \
-    --host "${WSR_EVIDENCE_DATABASE_HOST:?database host is required}" \
-    --username "${WSR_EVIDENCE_DATABASE_USER:?database user is required}" \
+    --host "${CRYSTRA_EVIDENCE_DATABASE_HOST:?database host is required}" \
+    --username "${CRYSTRA_EVIDENCE_DATABASE_USER:?database user is required}" \
     --dbname "$database_name" \
     --set=ON_ERROR_STOP=1 \
     --command "COPY (SELECT to_jsonb(row_value)::text FROM (SELECT * FROM $table ORDER BY $order) AS row_value) TO STDOUT" \

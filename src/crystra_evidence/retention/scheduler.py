@@ -7,7 +7,7 @@ import logging
 from datetime import timedelta
 from typing import Protocol
 
-from wsr_evidence.storage.read_model import DeliveryDeletionResult, ExpiryResult
+from crystra_evidence.storage.read_model import DeliveryDeletionResult, ExpiryResult
 
 LOGGER = logging.getLogger(__name__)
 

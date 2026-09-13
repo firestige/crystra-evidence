@@ -12,10 +12,10 @@ from typing import Any
 from psycopg import AsyncConnection
 from psycopg_pool import AsyncConnectionPool
 
-from wsr_evidence.query.faults import SnapshotError, SnapshotFault
-from wsr_evidence.query.model import QueryEffect
-from wsr_evidence.storage.postgresql import PostgresStorage
-from wsr_evidence.storage.read_model import (
+from crystra_evidence.query.faults import SnapshotError, SnapshotFault
+from crystra_evidence.query.model import QueryEffect
+from crystra_evidence.storage.postgresql import PostgresStorage
+from crystra_evidence.storage.read_model import (
     CORE_READ_MODEL_VERSION,
     DEFAULT_SNAPSHOT_LEASE_LIMIT,
     DEFAULT_SNAPSHOT_LEASE_TTL,

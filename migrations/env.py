@@ -8,7 +8,7 @@ config = context.config
 if config.config_file_name is not None:
     fileConfig(config.config_file_name)
 
-database_url = os.environ.get("WSR_EVIDENCE_DATABASE_URL")
+database_url = os.environ.get("CRYSTRA_EVIDENCE_DATABASE_URL")
 if database_url:
     sqlalchemy_url = database_url.replace("postgresql://", "postgresql+psycopg://", 1)
     config.set_main_option("sqlalchemy.url", sqlalchemy_url)

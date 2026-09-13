@@ -8,7 +8,7 @@ from typing import Any
 
 PLATFORMS = {"linux/amd64", "linux/arm64"}
 BUILD_TYPE = "https://github.com/moby/buildkit/blob/master/docs/attestations/slsa-definitions.md"
-SOURCE = "https://github.com/firestige/wsr-evidence"
+SOURCE = "https://github.com/firestige/crystra-evidence"
 
 
 class QualificationError(RuntimeError):
@@ -26,7 +26,7 @@ def validate_provenance(value: dict[str, Any], *, product_commit: str) -> None:
                 build["buildType"] != BUILD_TYPE
                 or arguments["vcs:source"] != SOURCE
                 or arguments["vcs:revision"] != product_commit
-                or arguments["build-arg:WSR_RELEASE_REVISION"] != product_commit
+                or arguments["build-arg:CRYSTRA_RELEASE_REVISION"] != product_commit
             ):
                 raise QualificationError("EVIDENCE_IMAGE_PROVENANCE_INVALID")
     except (KeyError, TypeError) as error:

@@ -1,9 +1,9 @@
 FROM ghcr.io/astral-sh/uv:0.11.28@sha256:0f36cb9361a3346885ca3677e3767016687b5a170c1a6b88465ec14aefec90aa AS uv
 FROM python:3.14.6-slim-bookworm@sha256:4c92ffcde4dd6f1ff72a24518f49fd4990b27134987dfa31a733badde66df9f8
 
-ARG WSR_RELEASE_REVISION=unbound
-LABEL org.opencontainers.image.source="https://github.com/firestige/wsr-evidence" \
-      org.opencontainers.image.revision=$WSR_RELEASE_REVISION
+ARG CRYSTRA_RELEASE_REVISION=unbound
+LABEL org.opencontainers.image.source="https://github.com/firestige/crystra-evidence" \
+      org.opencontainers.image.revision=$CRYSTRA_RELEASE_REVISION
 
 COPY --from=uv /uv /uvx /bin/
 WORKDIR /app
@@ -26,4 +26,4 @@ RUN uv sync --frozen --no-dev --no-editable \
 
 USER evidence
 EXPOSE 4318
-CMD ["wsr-evidence"]
+CMD ["crystra-evidence"]

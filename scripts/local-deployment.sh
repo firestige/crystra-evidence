@@ -1,7 +1,7 @@
 #!/bin/sh
 set -eu
 
-project_name="${WSR_EVIDENCE_COMPOSE_PROJECT:-wsr-evidence}"
+project_name="${CRYSTRA_EVIDENCE_COMPOSE_PROJECT:-crystra-evidence}"
 secret_dir="deployment/.secrets"
 compose_file="deployment/compose.yaml"
 
@@ -33,16 +33,16 @@ case "$command" in
   backup)
     ensure_secrets
     backup_file="${2:?backup filename is required}"
-    docker compose -p "$project_name" -f "$compose_file" --profile operations run --rm -e "WSR_EVIDENCE_BACKUP_FILE=$backup_file" backup
+    docker compose -p "$project_name" -f "$compose_file" --profile operations run --rm -e "CRYSTRA_EVIDENCE_BACKUP_FILE=$backup_file" backup
     ;;
   restore)
     ensure_secrets
     backup_file="${2:?backup filename is required}"
     restore_database="${3:?restore database is required}"
-    docker compose -p "$project_name" -f "$compose_file" --profile operations run --rm -e "WSR_EVIDENCE_BACKUP_FILE=$backup_file" -e "WSR_EVIDENCE_RESTORE_DATABASE=$restore_database" restore
+    docker compose -p "$project_name" -f "$compose_file" --profile operations run --rm -e "CRYSTRA_EVIDENCE_BACKUP_FILE=$backup_file" -e "CRYSTRA_EVIDENCE_RESTORE_DATABASE=$restore_database" restore
     ;;
   *)
-    echo "usage: $0 {up|down|backup <file>|restore <file> <wsr_evidence_restore_name>}" >&2
+    echo "usage: $0 {up|down|backup <file>|restore <file> <crystra_evidence_restore_name>}" >&2
     exit 2
     ;;
 esac

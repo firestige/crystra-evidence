@@ -9,10 +9,10 @@ from typing import Any
 import psycopg
 import pytest
 
-from wsr_evidence.admission.service import AdmissionService, Disposition
-from wsr_evidence.admission.validation import canonical_bytes
-from wsr_evidence.storage.postgresql import PostgresStorage
-from wsr_evidence.storage.read_model import CORE_READ_MODEL_VERSION
+from crystra_evidence.admission.service import AdmissionService, Disposition
+from crystra_evidence.admission.validation import canonical_bytes
+from crystra_evidence.storage.postgresql import PostgresStorage
+from crystra_evidence.storage.read_model import CORE_READ_MODEL_VERSION
 
 
 def finding_record(*, event_id: str, target_id: str = "artifact-1") -> dict[str, Any]:
@@ -228,9 +228,9 @@ def sampling_record(event_id: str) -> dict[str, Any]:
 @pytest.mark.integration
 @pytest.mark.asyncio
 async def test_identity_and_projection_commit_as_one_first_write_slice() -> None:
-    database_url = os.environ.get("WSR_EVIDENCE_DATABASE_URL")
+    database_url = os.environ.get("CRYSTRA_EVIDENCE_DATABASE_URL")
     if database_url is None:
-        pytest.skip("WSR_EVIDENCE_DATABASE_URL is not configured")
+        pytest.skip("CRYSTRA_EVIDENCE_DATABASE_URL is not configured")
     await clear_core(database_url)
 
     storage = await PostgresStorage.open(database_url)
@@ -267,9 +267,9 @@ async def test_identity_and_projection_commit_as_one_first_write_slice() -> None
 @pytest.mark.integration
 @pytest.mark.asyncio
 async def test_task_guard_and_display_conflicts_rollback_the_whole_record() -> None:
-    database_url = os.environ.get("WSR_EVIDENCE_DATABASE_URL")
+    database_url = os.environ.get("CRYSTRA_EVIDENCE_DATABASE_URL")
     if database_url is None:
-        pytest.skip("WSR_EVIDENCE_DATABASE_URL is not configured")
+        pytest.skip("CRYSTRA_EVIDENCE_DATABASE_URL is not configured")
     await clear_core(database_url)
     storage = await PostgresStorage.open(database_url)
     service = AdmissionService(storage)
@@ -305,9 +305,9 @@ async def test_task_guard_and_display_conflicts_rollback_the_whole_record() -> N
 @pytest.mark.integration
 @pytest.mark.asyncio
 async def test_lifecycle_preconditions_and_restart_retries_leave_no_half_state() -> None:
-    database_url = os.environ.get("WSR_EVIDENCE_DATABASE_URL")
+    database_url = os.environ.get("CRYSTRA_EVIDENCE_DATABASE_URL")
     if database_url is None:
-        pytest.skip("WSR_EVIDENCE_DATABASE_URL is not configured")
+        pytest.skip("CRYSTRA_EVIDENCE_DATABASE_URL is not configured")
     await clear_core(database_url)
     original = finding_record(event_id="event-original")
     fix = lifecycle_record(original, event_id="event-fix", review_id="review-fix", fix=True)
@@ -349,9 +349,9 @@ async def test_lifecycle_preconditions_and_restart_retries_leave_no_half_state()
 @pytest.mark.integration
 @pytest.mark.asyncio
 async def test_model_attribution_requires_the_matching_delivery_root_atomically() -> None:
-    database_url = os.environ.get("WSR_EVIDENCE_DATABASE_URL")
+    database_url = os.environ.get("CRYSTRA_EVIDENCE_DATABASE_URL")
     if database_url is None:
-        pytest.skip("WSR_EVIDENCE_DATABASE_URL is not configured")
+        pytest.skip("CRYSTRA_EVIDENCE_DATABASE_URL is not configured")
     await clear_core(database_url)
     storage = await PostgresStorage.open(database_url)
     service = AdmissionService(storage)
@@ -370,9 +370,9 @@ async def test_model_attribution_requires_the_matching_delivery_root_atomically(
 @pytest.mark.integration
 @pytest.mark.asyncio
 async def test_versioned_read_model_seam_has_stable_keyset_pagination() -> None:
-    database_url = os.environ.get("WSR_EVIDENCE_DATABASE_URL")
+    database_url = os.environ.get("CRYSTRA_EVIDENCE_DATABASE_URL")
     if database_url is None:
-        pytest.skip("WSR_EVIDENCE_DATABASE_URL is not configured")
+        pytest.skip("CRYSTRA_EVIDENCE_DATABASE_URL is not configured")
     await clear_core(database_url)
     storage = await PostgresStorage.open(database_url)
     service = AdmissionService(storage)

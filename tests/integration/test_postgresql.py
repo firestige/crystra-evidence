@@ -7,9 +7,9 @@ import pytest
 @pytest.mark.integration
 @pytest.mark.asyncio
 async def test_supported_postgresql_is_reachable() -> None:
-    database_url = os.environ.get("WSR_EVIDENCE_DATABASE_URL")
+    database_url = os.environ.get("CRYSTRA_EVIDENCE_DATABASE_URL")
     if database_url is None:
-        pytest.skip("WSR_EVIDENCE_DATABASE_URL is not configured")
+        pytest.skip("CRYSTRA_EVIDENCE_DATABASE_URL is not configured")
 
     async with (
         await psycopg.AsyncConnection.connect(database_url) as connection,

@@ -1,8 +1,8 @@
-# evidence-system
+# Crystra Evidence
 
 English | [中文](README.zh-CN.md)
 
-evidence-system is the Evidence System of workflow-self-recursive — an optional, separately deployable, loopback-only data service. It accepts supported OTLP facts from Execution, persists truthful causal and factual projections, and exposes committed state through a versioned read-only query API without controlling execution. Execution continues when Evidence or telemetry is unavailable.
+evidence-system is the Evidence System of Crystra — an optional, separately deployable, loopback-only data service. It accepts supported OTLP facts from Execution, persists truthful causal and factual projections, and exposes committed state through a versioned read-only query API without controlling execution. Execution continues when Evidence or telemetry is unavailable.
 
 Three modules separate the concerns:
 
@@ -14,7 +14,7 @@ The first release runs as one local Evidence API service and one internal Postgr
 
 ## Developer preview
 
-This repository is part of workflow-self-recursive's architecture-first developer preview for trusted local use by individuals and small teams. Admission, projection, query, automatic retention, and the local deployment are implemented and testable. **THERE WILL BE COMPATIBILITY-BREAKING CHANGES.**
+This repository is part of Crystra's architecture-first developer preview for trusted local use by individuals and small teams. Admission, projection, query, automatic retention, and the local deployment are implemented and testable. **THERE WILL BE COMPATIBILITY-BREAKING CHANGES.**
 
 ## Development
 
@@ -37,27 +37,27 @@ Local startup, separated database roles, file-backed secrets, read-only backup, 
 
 ## Get the source
 
-This repository is normally consumed as a submodule of [workflow-self-recursive](https://github.com/firestige/workflow-self-recursive):
+This repository is normally consumed as a submodule of [crystra](https://github.com/firestige/crystra):
 
 ```sh
-git clone --recurse-submodules https://github.com/firestige/workflow-self-recursive.git
+git clone --recurse-submodules https://github.com/firestige/crystra.git
 ```
 
 To clone it standalone:
 
 ```sh
-git clone https://github.com/firestige/wsr-evidence.git
+git clone https://github.com/firestige/crystra-evidence.git
 ```
 
 ## Documentation
 
-- [Evidence System design](https://github.com/firestige/workflow-self-recursive/blob/main/docs/systems/evidence/evidence-system.md)
-- [Evidence implementation baseline](https://github.com/firestige/workflow-self-recursive/blob/main/docs/systems/evidence/implementation-baseline.md)
+- [Evidence System design](https://github.com/firestige/crystra/blob/main/docs/systems/evidence/evidence-system.md)
+- [Evidence implementation baseline](https://github.com/firestige/crystra/blob/main/docs/systems/evidence/implementation-baseline.md)
 - [Evidence local operations and retention](docs/operations.md)
-- [Conceptual architecture](https://github.com/firestige/workflow-self-recursive/blob/main/docs/agent-architecture.md)
-- [Observation Catalog](https://github.com/firestige/workflow-self-recursive/blob/main/docs/contracts/observation/observation-catalog.md)
-- [OTel Observation Profile](https://github.com/firestige/workflow-self-recursive/blob/main/docs/contracts/observation/otel-observation-profile.md)
-- [Execution–Evidence interaction contract](https://github.com/firestige/workflow-self-recursive/blob/main/docs/contracts/execution-evidence/interaction-contract.md)
+- [Conceptual architecture](https://github.com/firestige/crystra/blob/main/docs/agent-architecture.md)
+- [Observation Catalog](https://github.com/firestige/crystra/blob/main/docs/contracts/observation/observation-catalog.md)
+- [OTel Observation Profile](https://github.com/firestige/crystra/blob/main/docs/contracts/observation/otel-observation-profile.md)
+- [Execution–Evidence interaction contract](https://github.com/firestige/crystra/blob/main/docs/contracts/execution-evidence/interaction-contract.md)
 
 ## License
 

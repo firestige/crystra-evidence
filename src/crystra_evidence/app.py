@@ -7,17 +7,17 @@ from contextlib import asynccontextmanager, suppress
 from fastapi import FastAPI
 from starlette.exceptions import HTTPException as StarletteHTTPException
 
-from wsr_evidence.admission.service import AdmissionService
-from wsr_evidence.query.postgresql import PostgresQueryReadModel
-from wsr_evidence.query.service import QueryService
-from wsr_evidence.retention.postgresql import PostgresRetentionMaintenance
-from wsr_evidence.retention.scheduler import RetentionRunner, run_retention_loop
-from wsr_evidence.retention.service import RetentionService
-from wsr_evidence.storage.postgresql import PostgresStorage
-from wsr_evidence.storage.read_model import DeliveryRetentionPolicy
-from wsr_evidence.transport.http import router
-from wsr_evidence.transport.otlp import OtlpIngestor, create_otlp_router
-from wsr_evidence.transport.query import create_query_router, query_transport_error
+from crystra_evidence.admission.service import AdmissionService
+from crystra_evidence.query.postgresql import PostgresQueryReadModel
+from crystra_evidence.query.service import QueryService
+from crystra_evidence.retention.postgresql import PostgresRetentionMaintenance
+from crystra_evidence.retention.scheduler import RetentionRunner, run_retention_loop
+from crystra_evidence.retention.service import RetentionService
+from crystra_evidence.storage.postgresql import PostgresStorage
+from crystra_evidence.storage.read_model import DeliveryRetentionPolicy
+from crystra_evidence.transport.http import router
+from crystra_evidence.transport.otlp import OtlpIngestor, create_otlp_router
+from crystra_evidence.transport.query import create_query_router, query_transport_error
 
 
 def create_app(
@@ -66,7 +66,7 @@ def create_app(
             if storage is not None:
                 await storage.close()
 
-    app = FastAPI(title="wsr-evidence", version="0.1.1", lifespan=lifespan)
+    app = FastAPI(title="crystra-evidence", version="0.1.1", lifespan=lifespan)
     app.add_exception_handler(StarletteHTTPException, query_transport_error)  # type: ignore[arg-type]
     app.include_router(router)
     if otlp_ingestor is not None:

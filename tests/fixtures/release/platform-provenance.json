@@ -8,8 +8,8 @@
             "root": {
               "request": {
                 "args": {
-                  "build-arg:WSR_RELEASE_REVISION": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
-                  "vcs:source": "https://github.com/firestige/wsr-evidence",
+                  "build-arg:CRYSTRA_RELEASE_REVISION": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+                  "vcs:source": "https://github.com/firestige/crystra-evidence",
                   "vcs:revision": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
                 }
               }
@@ -28,8 +28,8 @@
             "root": {
               "request": {
                 "args": {
-                  "build-arg:WSR_RELEASE_REVISION": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
-                  "vcs:source": "https://github.com/firestige/wsr-evidence",
+                  "build-arg:CRYSTRA_RELEASE_REVISION": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+                  "vcs:source": "https://github.com/firestige/crystra-evidence",
                   "vcs:revision": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
                 }
               }

@@ -18,11 +18,11 @@ from opentelemetry.proto.logs.v1.logs_pb2 import LogRecord, ResourceLogs, ScopeL
 from opentelemetry.proto.resource.v1.resource_pb2 import Resource
 from opentelemetry.proto.trace.v1.trace_pb2 import ResourceSpans, ScopeSpans, Span, Status
 
-from wsr_evidence.admission.service import AdmissionService, Disposition
-from wsr_evidence.admission.validation import ValidationError, canonical_bytes, validate_record
-from wsr_evidence.app import create_app
-from wsr_evidence.model import ProjectionEffect
-from wsr_evidence.transport.otlp import OtlpIngestor, decode_logs_request, decode_traces_request
+from crystra_evidence.admission.service import AdmissionService, Disposition
+from crystra_evidence.admission.validation import ValidationError, canonical_bytes, validate_record
+from crystra_evidence.app import create_app
+from crystra_evidence.model import ProjectionEffect
+from crystra_evidence.transport.otlp import OtlpIngestor, decode_logs_request, decode_traces_request
 
 
 def _kv(name: str, value: str | int | float) -> KeyValue:

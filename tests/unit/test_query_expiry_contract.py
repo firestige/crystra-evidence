@@ -2,7 +2,7 @@ from datetime import UTC, datetime, timedelta
 
 import pytest
 
-from wsr_evidence.storage.read_model import (
+from crystra_evidence.storage.read_model import (
     DEFAULT_FACTUAL_PROJECTION_TTL,
     DEFAULT_PAGE_LIMIT,
     DEFAULT_RAW_DEBUG_TTL,

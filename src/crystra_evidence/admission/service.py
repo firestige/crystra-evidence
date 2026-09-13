@@ -5,16 +5,16 @@ from __future__ import annotations
 from dataclasses import dataclass
 from typing import Any, Protocol
 
-from wsr_evidence.admission.validation import validate_record
-from wsr_evidence.model import (
+from crystra_evidence.admission.validation import validate_record
+from crystra_evidence.model import (
     Disposition,
     ProjectionConflict,
     ProjectionEffect,
     ProjectionPreconditionFailed,
     ValidatedRecord,
 )
-from wsr_evidence.projection.effects import project
-from wsr_evidence.storage.transaction import TransactionManager
+from crystra_evidence.projection.effects import project
+from crystra_evidence.storage.transaction import TransactionManager
 
 
 class AdmissionTransaction(Protocol):

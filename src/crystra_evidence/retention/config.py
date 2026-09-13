@@ -7,7 +7,7 @@ from dataclasses import dataclass
 from datetime import timedelta
 from typing import cast
 
-from wsr_evidence.storage.read_model import DeliveryRetentionPolicy
+from crystra_evidence.storage.read_model import DeliveryRetentionPolicy
 
 
 def _duration(name: str, default: str, *, never: bool) -> timedelta | None:
@@ -38,9 +38,9 @@ class RetentionSettings:
     @classmethod
     def from_environment(cls) -> RetentionSettings:
         retired_variables = (
-            "WSR_EVIDENCE_TRACE_DETAIL_TTL",
-            "WSR_EVIDENCE_FACTUAL_PROJECTION_TTL",
-            "WSR_EVIDENCE_ACCEPTED_PROVENANCE_TTL",
+            "CRYSTRA_EVIDENCE_TRACE_DETAIL_TTL",
+            "CRYSTRA_EVIDENCE_FACTUAL_PROJECTION_TTL",
+            "CRYSTRA_EVIDENCE_ACCEPTED_PROVENANCE_TTL",
         )
         configured = next((name for name in retired_variables if name in os.environ), None)
         if configured is not None:
@@ -49,12 +49,12 @@ class RetentionSettings:
             policy=DeliveryRetentionPolicy(
                 raw_debug_ttl=cast(
                     timedelta,
-                    _duration("WSR_EVIDENCE_RAW_DEBUG_TTL", "PT0S", never=False),
+                    _duration("CRYSTRA_EVIDENCE_RAW_DEBUG_TTL", "PT0S", never=False),
                 ),
-                delivery_ttl=_duration("WSR_EVIDENCE_DELIVERY_TTL", "P30D", never=True),
-                batch_size=_integer("WSR_EVIDENCE_RETENTION_BATCH_SIZE", "500"),
+                delivery_ttl=_duration("CRYSTRA_EVIDENCE_DELIVERY_TTL", "P30D", never=True),
+                batch_size=_integer("CRYSTRA_EVIDENCE_RETENTION_BATCH_SIZE", "500"),
                 interval=timedelta(
-                    seconds=_integer("WSR_EVIDENCE_RETENTION_INTERVAL_SECONDS", "60")
+                    seconds=_integer("CRYSTRA_EVIDENCE_RETENTION_INTERVAL_SECONDS", "60")
                 ),
             )
         )

@@ -57,7 +57,7 @@ def test_platform_qualification_rejects_missing_or_mismatched_attestations(
         ]["root"]["request"]["args"]
         key = {
             "wrong-revision": "vcs:revision",
-            "wrong-product": "build-arg:WSR_RELEASE_REVISION",
+            "wrong-product": "build-arg:CRYSTRA_RELEASE_REVISION",
             "wrong-source": "vcs:source",
         }[mutation]
         args[key] = "mismatch"

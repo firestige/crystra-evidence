@@ -17,7 +17,7 @@ def test_rc3_manifest_binds_task_route_product_schema_and_assets() -> None:
     assert evidence["candidate_archive_commit"] == PRODUCT_COMMIT
     assert evidence["payload_commit"] == "7e3ff4a9f87b17b428a07054ff9826aeb863b57f"
     assert evidence["migration_revision"] == "20260828_0004"
-    assert "/v1/evidence/tasks" in (ROOT / "src/wsr_evidence/transport/query.py").read_text()
+    assert "/v1/evidence/tasks" in (ROOT / "src/crystra_evidence/transport/query.py").read_text()
     assert candidate["gates"]["task_route_and_schema"] == "PASS"
     assert candidate["assets"] == [
         {

@@ -1,6 +1,6 @@
 {
-  "schemaVersion": "wsr.release-component@1.0.0",
-  "repository": "firestige/wsr-evidence",
+  "schemaVersion": "crystra.release-component@1.0.0",
+  "repository": "firestige/crystra-evidence",
   "releaseBranch": "main",
   "triggerBranch": "release/next",
   "assetMode": "python-wheel-sdist+oci",

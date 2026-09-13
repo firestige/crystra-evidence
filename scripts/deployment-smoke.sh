@@ -1,7 +1,7 @@
 #!/bin/sh
 set -eu
 
-project_name="wsr-evidence-deployment"
+project_name="crystra-evidence-deployment"
 smoke_dir="$(mktemp -d)"
 chmod 700 "$smoke_dir"
 compose_file="deployment/compose.yaml"
@@ -15,10 +15,10 @@ printf '%s\n' "smoke-backup-$(openssl rand -hex 16)" > "$smoke_dir/backup-passwo
 # The private parent directory protects the files on the host; the files themselves
 # must remain readable after the database image drops from root to its postgres user.
 chmod 644 "$smoke_dir"/*-password
-export WSR_EVIDENCE_ADMIN_PASSWORD_FILE="$smoke_dir/admin-password"
-export WSR_EVIDENCE_RUNTIME_PASSWORD_FILE="$smoke_dir/runtime-password"
-export WSR_EVIDENCE_BACKUP_PASSWORD_FILE="$smoke_dir/backup-password"
-export WSR_EVIDENCE_RETENTION_INTERVAL_SECONDS=10
+export CRYSTRA_EVIDENCE_ADMIN_PASSWORD_FILE="$smoke_dir/admin-password"
+export CRYSTRA_EVIDENCE_RUNTIME_PASSWORD_FILE="$smoke_dir/runtime-password"
+export CRYSTRA_EVIDENCE_BACKUP_PASSWORD_FILE="$smoke_dir/backup-password"
+export CRYSTRA_EVIDENCE_RETENTION_INTERVAL_SECONDS=10
 
 cleanup() {
   if test -n "$restore_container"; then
@@ -51,24 +51,24 @@ curl --fail --silent --show-error \
 
 accepted_count="$(
   docker compose -p "$project_name" -f "$compose_file" exec -T database sh -eu -c \
-    'PGPASSWORD="$(cat /run/secrets/runtime_password)" psql -h 127.0.0.1 -U wsr_evidence_runtime -d wsr_evidence -tAc "SELECT count(*) FROM accepted_records"'
+    'PGPASSWORD="$(cat /run/secrets/runtime_password)" psql -h 127.0.0.1 -U crystra_evidence_runtime -d crystra_evidence -tAc "SELECT count(*) FROM accepted_records"'
 )"
 test "$accepted_count" = "1"
 
 role_state="$(
   docker compose -p "$project_name" -f "$compose_file" exec -T database \
-    psql -U wsr_evidence_admin -d wsr_evidence -tAc \
-    "SELECT rolname || ':' || rolsuper || ':' || rolcreatedb || ':' || rolcreaterole FROM pg_roles WHERE rolname IN ('wsr_evidence_runtime','wsr_evidence_backup') ORDER BY rolname"
+    psql -U crystra_evidence_admin -d crystra_evidence -tAc \
+    "SELECT rolname || ':' || rolsuper || ':' || rolcreatedb || ':' || rolcreaterole FROM pg_roles WHERE rolname IN ('crystra_evidence_runtime','crystra_evidence_backup') ORDER BY rolname"
 )"
-test "$role_state" = "wsr_evidence_backup:false:false:false
-wsr_evidence_runtime:false:false:false"
+test "$role_state" = "crystra_evidence_backup:false:false:false
+crystra_evidence_runtime:false:false:false"
 backup_read_only="$(
   docker compose -p "$project_name" -f "$compose_file" exec -T database sh -eu -c \
-    'PGPASSWORD="$(cat /run/secrets/backup_password)" psql -h 127.0.0.1 -U wsr_evidence_backup -d wsr_evidence -tAc "SHOW default_transaction_read_only"'
+    'PGPASSWORD="$(cat /run/secrets/backup_password)" psql -h 127.0.0.1 -U crystra_evidence_backup -d crystra_evidence -tAc "SHOW default_transaction_read_only"'
 )"
 test "$backup_read_only" = "on"
 if docker compose -p "$project_name" -f "$compose_file" exec -T database sh -eu -c \
-  'PGPASSWORD="$(cat /run/secrets/backup_password)" psql -h 127.0.0.1 -U wsr_evidence_backup -d wsr_evidence -v ON_ERROR_STOP=1 -c "CREATE TABLE forbidden_backup_write(id integer)"' \
+  'PGPASSWORD="$(cat /run/secrets/backup_password)" psql -h 127.0.0.1 -U crystra_evidence_backup -d crystra_evidence -v ON_ERROR_STOP=1 -c "CREATE TABLE forbidden_backup_write(id integer)"' \
   >"$smoke_dir/backup-write.stdout" 2>"$smoke_dir/backup-write.stderr"; then
   echo "backup role unexpectedly wrote to the database" >&2
   exit 1
@@ -79,7 +79,7 @@ raw_marker_count=0
 while test "$attempt" -lt 20; do
   raw_marker_count="$(
     docker compose -p "$project_name" -f "$compose_file" exec -T database sh -eu -c \
-      'PGPASSWORD="$(cat /run/secrets/runtime_password)" psql -h 127.0.0.1 -U wsr_evidence_runtime -d wsr_evidence -tAc "SELECT count(*) FROM retention_expiry_markers WHERE resource_class = '\''RAW_DEBUG'\''"'
+      'PGPASSWORD="$(cat /run/secrets/runtime_password)" psql -h 127.0.0.1 -U crystra_evidence_runtime -d crystra_evidence -tAc "SELECT count(*) FROM retention_expiry_markers WHERE resource_class = '\''RAW_DEBUG'\''"'
   )"
   test "$raw_marker_count" = "1" && break
   attempt=$((attempt + 1))
@@ -93,25 +93,25 @@ curl --fail --silent --show-error \
 uv run --python 3.14 python -c 'import json,sys; value=json.load(open(sys.argv[1])); assert value["contract"] == {"name":"evidence.query","revision":"0.1.0"}; assert value["items"]; assert all(item["truth"]["expiry"] == "ACTIVE" for item in value["items"])' "$smoke_dir/original-facts.json"
 
 docker compose -p "$project_name" -f "$compose_file" --profile operations run --rm \
-  -e WSR_EVIDENCE_BACKUP_FILE=wave10.backup backup > "$smoke_dir/backup.out"
+  -e CRYSTRA_EVIDENCE_BACKUP_FILE=wave10.backup backup > "$smoke_dir/backup.out"
 docker compose -p "$project_name" -f "$compose_file" --profile operations run --rm \
-  -e WSR_EVIDENCE_BACKUP_FILE=wave10.backup \
-  -e WSR_EVIDENCE_RESTORE_DATABASE=wsr_evidence_restore_wave10 restore
+  -e CRYSTRA_EVIDENCE_BACKUP_FILE=wave10.backup \
+  -e CRYSTRA_EVIDENCE_RESTORE_DATABASE=crystra_evidence_restore_wave10 restore
 
 original_digest="$(
   docker compose -p "$project_name" -f "$compose_file" --profile operations run --rm \
-    --entrypoint /opt/wsr/state-digest.sh backup
+    --entrypoint /opt/crystra/state-digest.sh backup
 )"
 restored_digest="$(
   docker compose -p "$project_name" -f "$compose_file" --profile operations run --rm \
-    --entrypoint /opt/wsr/state-digest.sh -e WSR_EVIDENCE_DATABASE_NAME=wsr_evidence_restore_wave10 backup
+    --entrypoint /opt/crystra/state-digest.sh -e CRYSTRA_EVIDENCE_DATABASE_NAME=crystra_evidence_restore_wave10 backup
 )"
 test "$original_digest" = "$restored_digest"
 
 docker compose -p "$project_name" -f "$compose_file" stop evidence
 restore_container="$(
   docker compose -p "$project_name" -f "$compose_file" run --detach --rm --service-ports --no-deps \
-    -e WSR_EVIDENCE_DATABASE_NAME=wsr_evidence_restore_wave10 evidence
+    -e CRYSTRA_EVIDENCE_DATABASE_NAME=crystra_evidence_restore_wave10 evidence
 )"
 attempt=0
 until curl --fail --silent --show-error http://127.0.0.1:4318/healthz >/dev/null 2>&1; do

@@ -10,15 +10,15 @@ import psycopg
 import pytest
 from httpx import ASGITransport, AsyncClient
 
-from wsr_evidence.admission.service import AdmissionService, Disposition
-from wsr_evidence.admission.validation import canonical_bytes
-from wsr_evidence.app import create_app
-from wsr_evidence.query.faults import SnapshotError, SnapshotFault
-from wsr_evidence.query.postgresql import PostgresQueryReadModel
-from wsr_evidence.query.service import QueryService
-from wsr_evidence.retention.postgresql import PostgresRetentionMaintenance
-from wsr_evidence.storage.postgresql import PostgresStorage
-from wsr_evidence.storage.read_model import (
+from crystra_evidence.admission.service import AdmissionService, Disposition
+from crystra_evidence.admission.validation import canonical_bytes
+from crystra_evidence.app import create_app
+from crystra_evidence.query.faults import SnapshotError, SnapshotFault
+from crystra_evidence.query.postgresql import PostgresQueryReadModel
+from crystra_evidence.query.service import QueryService
+from crystra_evidence.retention.postgresql import PostgresRetentionMaintenance
+from crystra_evidence.storage.postgresql import PostgresStorage
+from crystra_evidence.storage.read_model import (
     ExpiryBatch,
     ExpiryOwner,
     ResourceClass,
@@ -183,9 +183,9 @@ async def clear_core(database_url: str) -> None:
 @pytest.mark.integration
 @pytest.mark.asyncio
 async def test_snapshot_cursor_excludes_later_commits_and_is_replay_stable() -> None:
-    database_url = os.environ.get("WSR_EVIDENCE_DATABASE_URL")
+    database_url = os.environ.get("CRYSTRA_EVIDENCE_DATABASE_URL")
     if database_url is None:
-        pytest.skip("WSR_EVIDENCE_DATABASE_URL is not configured")
+        pytest.skip("CRYSTRA_EVIDENCE_DATABASE_URL is not configured")
     await clear_core(database_url)
     storage = await PostgresStorage.open(database_url)
     query_storage = PostgresQueryReadModel.from_storage(storage)
@@ -219,9 +219,9 @@ async def test_snapshot_cursor_excludes_later_commits_and_is_replay_stable() -> 
 @pytest.mark.integration
 @pytest.mark.asyncio
 async def test_task_query_joins_name_provenance_and_applies_membership_cutoff() -> None:
-    database_url = os.environ.get("WSR_EVIDENCE_DATABASE_URL")
+    database_url = os.environ.get("CRYSTRA_EVIDENCE_DATABASE_URL")
     if database_url is None:
-        pytest.skip("WSR_EVIDENCE_DATABASE_URL is not configured")
+        pytest.skip("CRYSTRA_EVIDENCE_DATABASE_URL is not configured")
     await clear_core(database_url)
     storage = await PostgresStorage.open(database_url)
     query_storage = PostgresQueryReadModel.from_storage(storage)
@@ -286,9 +286,9 @@ async def test_task_query_joins_name_provenance_and_applies_membership_cutoff() 
 @pytest.mark.integration
 @pytest.mark.asyncio
 async def test_trace_sort_is_node_parent_link_and_delivery_traversal_is_bounded() -> None:
-    database_url = os.environ.get("WSR_EVIDENCE_DATABASE_URL")
+    database_url = os.environ.get("CRYSTRA_EVIDENCE_DATABASE_URL")
     if database_url is None:
-        pytest.skip("WSR_EVIDENCE_DATABASE_URL is not configured")
+        pytest.skip("CRYSTRA_EVIDENCE_DATABASE_URL is not configured")
     await clear_core(database_url)
     storage = await PostgresStorage.open(database_url)
     query_storage = PostgresQueryReadModel.from_storage(storage)
@@ -332,9 +332,9 @@ async def test_trace_sort_is_node_parent_link_and_delivery_traversal_is_bounded(
 @pytest.mark.integration
 @pytest.mark.asyncio
 async def test_raw_debug_scrub_does_not_change_projection_filters() -> None:
-    database_url = os.environ.get("WSR_EVIDENCE_DATABASE_URL")
+    database_url = os.environ.get("CRYSTRA_EVIDENCE_DATABASE_URL")
     if database_url is None:
-        pytest.skip("WSR_EVIDENCE_DATABASE_URL is not configured")
+        pytest.skip("CRYSTRA_EVIDENCE_DATABASE_URL is not configured")
     await clear_core(database_url)
     storage = await PostgresStorage.open(database_url)
     query_storage = PostgresQueryReadModel.from_storage(storage)
@@ -366,9 +366,9 @@ async def test_raw_debug_scrub_does_not_change_projection_filters() -> None:
 @pytest.mark.integration
 @pytest.mark.asyncio
 async def test_correlated_event_facts_are_selected_by_exact_trace_and_delivery() -> None:
-    database_url = os.environ.get("WSR_EVIDENCE_DATABASE_URL")
+    database_url = os.environ.get("CRYSTRA_EVIDENCE_DATABASE_URL")
     if database_url is None:
-        pytest.skip("WSR_EVIDENCE_DATABASE_URL is not configured")
+        pytest.skip("CRYSTRA_EVIDENCE_DATABASE_URL is not configured")
     await clear_core(database_url)
     storage = await PostgresStorage.open(database_url)
     query_storage = PostgresQueryReadModel.from_storage(storage)
@@ -437,9 +437,9 @@ async def test_correlated_event_facts_are_selected_by_exact_trace_and_delivery()
 @pytest.mark.integration
 @pytest.mark.asyncio
 async def test_retention_lifecycles_are_independent_idempotent_and_queryable() -> None:
-    database_url = os.environ.get("WSR_EVIDENCE_DATABASE_URL")
+    database_url = os.environ.get("CRYSTRA_EVIDENCE_DATABASE_URL")
     if database_url is None:
-        pytest.skip("WSR_EVIDENCE_DATABASE_URL is not configured")
+        pytest.skip("CRYSTRA_EVIDENCE_DATABASE_URL is not configured")
     await clear_core(database_url)
     storage = await PostgresStorage.open(database_url)
     query_storage = PostgresQueryReadModel.from_storage(storage)
@@ -602,9 +602,9 @@ async def test_retention_lifecycles_are_independent_idempotent_and_queryable() -
 @pytest.mark.integration
 @pytest.mark.asyncio
 async def test_retention_batch_failure_rolls_back_scrub_and_tombstone() -> None:
-    database_url = os.environ.get("WSR_EVIDENCE_DATABASE_URL")
+    database_url = os.environ.get("CRYSTRA_EVIDENCE_DATABASE_URL")
     if database_url is None:
-        pytest.skip("WSR_EVIDENCE_DATABASE_URL is not configured")
+        pytest.skip("CRYSTRA_EVIDENCE_DATABASE_URL is not configured")
     await clear_core(database_url)
     storage = await PostgresStorage.open(database_url)
     maintenance = PostgresRetentionMaintenance.from_storage(storage)
@@ -645,9 +645,9 @@ async def test_retention_batch_failure_rolls_back_scrub_and_tombstone() -> None:
 @pytest.mark.integration
 @pytest.mark.asyncio
 async def test_delivery_deletion_reference_counts_task_and_blocks_late_recreation() -> None:
-    database_url = os.environ.get("WSR_EVIDENCE_DATABASE_URL")
+    database_url = os.environ.get("CRYSTRA_EVIDENCE_DATABASE_URL")
     if database_url is None:
-        pytest.skip("WSR_EVIDENCE_DATABASE_URL is not configured")
+        pytest.skip("CRYSTRA_EVIDENCE_DATABASE_URL is not configured")
     await clear_core(database_url)
     storage = await PostgresStorage.open(database_url)
     admission = AdmissionService(storage)
@@ -746,9 +746,9 @@ async def test_delivery_deletion_reference_counts_task_and_blocks_late_recreatio
 @pytest.mark.integration
 @pytest.mark.asyncio
 async def test_equal_owner_keys_expire_independently_by_public_resource_kind() -> None:
-    database_url = os.environ.get("WSR_EVIDENCE_DATABASE_URL")
+    database_url = os.environ.get("CRYSTRA_EVIDENCE_DATABASE_URL")
     if database_url is None:
-        pytest.skip("WSR_EVIDENCE_DATABASE_URL is not configured")
+        pytest.skip("CRYSTRA_EVIDENCE_DATABASE_URL is not configured")
     await clear_core(database_url)
     storage = await PostgresStorage.open(database_url)
     query_storage = PostgresQueryReadModel.from_storage(storage)
@@ -830,9 +830,9 @@ async def test_equal_owner_keys_expire_independently_by_public_resource_kind() -
 @pytest.mark.integration
 @pytest.mark.asyncio
 async def test_database_lifespan_serves_empty_queries_without_leaking_snapshot_capacity() -> None:
-    database_url = os.environ.get("WSR_EVIDENCE_DATABASE_URL")
+    database_url = os.environ.get("CRYSTRA_EVIDENCE_DATABASE_URL")
     if database_url is None:
-        pytest.skip("WSR_EVIDENCE_DATABASE_URL is not configured")
+        pytest.skip("CRYSTRA_EVIDENCE_DATABASE_URL is not configured")
     await clear_core(database_url)
     app = create_app(database_url=database_url)
     transport = ASGITransport(app=app)

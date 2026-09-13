@@ -3,7 +3,7 @@
 from dataclasses import dataclass
 from typing import Protocol, runtime_checkable
 
-from wsr_evidence.storage.read_model import StoredEffect
+from crystra_evidence.storage.read_model import StoredEffect
 
 
 @dataclass(frozen=True, slots=True)

@@ -1,6 +1,6 @@
 import pytest
 
-from wsr_evidence.config import RuntimeSettings
+from crystra_evidence.config import RuntimeSettings
 
 
 def test_runtime_defaults_to_otlp_http_on_ipv4_loopback() -> None:
@@ -26,3 +26,11 @@ def test_container_scope_explicitly_allows_internal_wildcard_binding() -> None:
 
     assert settings.host == "0.0.0.0"
     assert settings.bind_scope == "container"
+
+
+def test_crystra_environment_selects_runtime_configuration(monkeypatch: pytest.MonkeyPatch) -> None:
+    monkeypatch.setenv("CRYSTRA_EVIDENCE_PORT", "4320")
+    monkeypatch.setenv("CRYSTRA_EVIDENCE_DATABASE_URL", "postgresql://localhost/crystra_evidence")
+    settings = RuntimeSettings.from_environment()
+    assert settings.port == 4320
+    assert settings.database_url == "postgresql://localhost/crystra_evidence"

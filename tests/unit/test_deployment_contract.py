@@ -16,7 +16,7 @@ def test_supported_deployment_has_closed_network_and_service_surface() -> None:
 
 
 def test_database_roles_and_credentials_are_separated() -> None:
-    for role in ["wsr_evidence_admin", "wsr_evidence_runtime", "wsr_evidence_backup"]:
+    for role in ["crystra_evidence_admin", "crystra_evidence_runtime", "crystra_evidence_backup"]:
         assert role in COMPOSE
     for secret in ["admin_password", "runtime_password", "backup_password"]:
         assert secret in COMPOSE
@@ -84,12 +84,12 @@ def test_release_workflow_delegates_to_the_tested_trigger_gate() -> None:
     assert 'test "$GITHUB_REF_NAME" = "release/next"' not in workflow
 
 
-def test_release_workflow_uses_tooling_from_its_exact_publisher_revision() -> None:
+def test_release_workflow_uses_tooling_from_its_exact_component_revision() -> None:
     workflow = (ROOT / ".github" / "workflows" / "release-candidate.yml").read_text(
         encoding="utf-8"
     )
 
-    assert workflow.count("ref: ${{ github.workflow_sha }}") >= 2
+    assert "ref: ${{ github.sha }}" in workflow
     assert "PUBLISHER_REVISION: ${{ github.workflow_sha }}" in workflow
-    assert 'git -C release-publisher rev-parse HEAD)" = "$PUBLISHER_REVISION"' in workflow
+    assert "release-publisher" not in workflow
     assert '"publisherRevision":os.environ["PUBLISHER_REVISION"]' in workflow

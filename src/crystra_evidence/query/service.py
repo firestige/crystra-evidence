@@ -12,10 +12,10 @@ from enum import StrEnum
 from hashlib import sha256
 from typing import Any, cast
 
-from wsr_evidence.clock import Clock, SystemClock
-from wsr_evidence.query.faults import SnapshotError, SnapshotFault
-from wsr_evidence.query.model import ManifestReader, QueryEffect, SnapshotReleaser
-from wsr_evidence.storage.read_model import (
+from crystra_evidence.clock import Clock, SystemClock
+from crystra_evidence.query.faults import SnapshotError, SnapshotFault
+from crystra_evidence.query.model import ManifestReader, QueryEffect, SnapshotReleaser
+from crystra_evidence.storage.read_model import (
     DEFAULT_PAGE_LIMIT,
     MAX_PAGE_LIMIT,
     Availability,

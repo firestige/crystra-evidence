@@ -2,12 +2,12 @@ from datetime import UTC, datetime, timedelta
 
 import pytest
 
-from wsr_evidence.clock import FakeClock
-from wsr_evidence.retention.config import RetentionSettings
-from wsr_evidence.retention.postgresql import _projection_compatibility
-from wsr_evidence.retention.scheduler import run_retention_loop
-from wsr_evidence.retention.service import RetentionService
-from wsr_evidence.storage.read_model import (
+from crystra_evidence.clock import FakeClock
+from crystra_evidence.retention.config import RetentionSettings
+from crystra_evidence.retention.postgresql import _projection_compatibility
+from crystra_evidence.retention.scheduler import run_retention_loop
+from crystra_evidence.retention.service import RetentionService
+from crystra_evidence.storage.read_model import (
     DeliveryDeletionBatch,
     DeliveryDeletionResult,
     DeliveryRetentionPolicy,
@@ -146,10 +146,10 @@ async def test_fake_clock_plans_raw_scrub_and_one_delivery_deletion_lifecycle() 
 
 
 def test_environment_projects_exact_retention_policy(monkeypatch: pytest.MonkeyPatch) -> None:
-    monkeypatch.setenv("WSR_EVIDENCE_RAW_DEBUG_TTL", "P1D")
-    monkeypatch.setenv("WSR_EVIDENCE_DELIVERY_TTL", "P90D")
-    monkeypatch.setenv("WSR_EVIDENCE_RETENTION_BATCH_SIZE", "17")
-    monkeypatch.setenv("WSR_EVIDENCE_RETENTION_INTERVAL_SECONDS", "30")
+    monkeypatch.setenv("CRYSTRA_EVIDENCE_RAW_DEBUG_TTL", "P1D")
+    monkeypatch.setenv("CRYSTRA_EVIDENCE_DELIVERY_TTL", "P90D")
+    monkeypatch.setenv("CRYSTRA_EVIDENCE_RETENTION_BATCH_SIZE", "17")
+    monkeypatch.setenv("CRYSTRA_EVIDENCE_RETENTION_INTERVAL_SECONDS", "30")
 
     settings = RetentionSettings.from_environment()
 
@@ -164,13 +164,13 @@ def test_environment_projects_exact_retention_policy(monkeypatch: pytest.MonkeyP
 @pytest.mark.parametrize(
     ("name", "value"),
     [
-        ("WSR_EVIDENCE_RAW_DEBUG_TTL", "NEVER"),
-        ("WSR_EVIDENCE_DELIVERY_TTL", "PT24H"),
-        ("WSR_EVIDENCE_TRACE_DETAIL_TTL", "P30D"),
-        ("WSR_EVIDENCE_FACTUAL_PROJECTION_TTL", "P365D"),
-        ("WSR_EVIDENCE_ACCEPTED_PROVENANCE_TTL", "P1D"),
-        ("WSR_EVIDENCE_RETENTION_BATCH_SIZE", "1.5"),
-        ("WSR_EVIDENCE_RETENTION_INTERVAL_SECONDS", "ten"),
+        ("CRYSTRA_EVIDENCE_RAW_DEBUG_TTL", "NEVER"),
+        ("CRYSTRA_EVIDENCE_DELIVERY_TTL", "PT24H"),
+        ("CRYSTRA_EVIDENCE_TRACE_DETAIL_TTL", "P30D"),
+        ("CRYSTRA_EVIDENCE_FACTUAL_PROJECTION_TTL", "P365D"),
+        ("CRYSTRA_EVIDENCE_ACCEPTED_PROVENANCE_TTL", "P1D"),
+        ("CRYSTRA_EVIDENCE_RETENTION_BATCH_SIZE", "1.5"),
+        ("CRYSTRA_EVIDENCE_RETENTION_INTERVAL_SECONDS", "ten"),
     ],
 )
 def test_environment_rejects_unsupported_retention_values_before_runtime_effects(

@@ -9,7 +9,7 @@ from decimal import Decimal
 from hashlib import sha256
 from typing import Any, cast
 
-from wsr_evidence.model import ValidatedRecord
+from crystra_evidence.model import ValidatedRecord
 
 PROFILE_VERSION = "1.0.0"
 TASK_PROFILE_VERSION = "2.0.0"

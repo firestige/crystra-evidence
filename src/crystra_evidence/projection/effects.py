@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from typing import Any
 
-from wsr_evidence.model import ProjectionEffect, ValidatedRecord
+from crystra_evidence.model import ProjectionEffect, ValidatedRecord
 
 
 def project(record: ValidatedRecord) -> tuple[ProjectionEffect, ...]:

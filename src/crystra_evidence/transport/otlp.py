@@ -18,9 +18,9 @@ from opentelemetry.proto.collector.trace.v1.trace_service_pb2 import (
 from opentelemetry.proto.common.v1.common_pb2 import AnyValue, KeyValue
 from opentelemetry.proto.trace.v1.trace_pb2 import Span, Status
 
-from wsr_evidence.admission.service import AdmissionService
-from wsr_evidence.admission.validation import ValidationError, canonical_bytes
-from wsr_evidence.model import Disposition
+from crystra_evidence.admission.service import AdmissionService
+from crystra_evidence.admission.validation import ValidationError, canonical_bytes
+from crystra_evidence.model import Disposition
 
 MAX_BATCH_BYTES = 4 * 1024 * 1024
 MAX_BATCH_RECORDS = 512

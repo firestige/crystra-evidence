@@ -9,7 +9,7 @@ from fastapi import APIRouter, Request
 from fastapi.responses import JSONResponse
 from starlette.exceptions import HTTPException as StarletteHTTPException
 
-from wsr_evidence.query.service import QueryError, QueryErrorCode, QueryService
+from crystra_evidence.query.service import QueryError, QueryErrorCode, QueryService
 
 ERROR_STATUS = {
     QueryErrorCode.INVALID_FILTER: 400,

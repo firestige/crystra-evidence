@@ -23,7 +23,7 @@ jobs:
           version: 0.11.28
           python-version: ${{ matrix.python-version }}
       - run: uv sync --locked
-      - run: uv run pytest -q tests/unit
+      - run: uv run pytest -q tests/unit test/tooling/release
 
   quality-and-build:
     runs-on: ubuntu-latest
@@ -45,18 +45,18 @@ jobs:
       postgres:
         image: postgres:18.4-bookworm@sha256:882236b897e39051d2368c5ccc6cda944904723506b2dfc97f2a8f5bc9afa382
         env:
-          POSTGRES_DB: wsr_evidence
+          POSTGRES_DB: crystra_evidence
           POSTGRES_PASSWORD: ci-only
-          POSTGRES_USER: wsr_evidence
+          POSTGRES_USER: crystra_evidence
         ports:
           - 5432:5432
         options: >-
-          --health-cmd "pg_isready -U wsr_evidence -d wsr_evidence"
+          --health-cmd "pg_isready -U crystra_evidence -d crystra_evidence"
           --health-interval 2s
           --health-timeout 3s
           --health-retries 20
     env:
-      WSR_EVIDENCE_DATABASE_URL: postgresql://wsr_evidence:ci-only@localhost:5432/wsr_evidence
+      CRYSTRA_EVIDENCE_DATABASE_URL: postgresql://crystra_evidence:ci-only@localhost:5432/crystra_evidence
     steps:
       - uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5
       - uses: astral-sh/setup-uv@94527f2e458b27549849d47d273a16bec83a01e9 # v7

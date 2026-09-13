@@ -10,7 +10,7 @@ import pytest
 
 ROOT = Path(__file__).parents[3]
 SPEC = importlib.util.spec_from_file_location(
-    "wsr_evidence_release", ROOT / "release/cli/release.py"
+    "crystra_evidence_release", ROOT / "release/cli/release.py"
 )
 assert SPEC is not None and SPEC.loader is not None
 release = importlib.util.module_from_spec(SPEC)
@@ -27,7 +27,7 @@ def test_python_adapter_configuration_does_not_select_npm() -> None:
 
     assert_configuration(config)
 
-    assert config["repository"] == "firestige/wsr-evidence"
+    assert config["repository"] == "firestige/crystra-evidence"
     assert config["assetMode"] == "python-wheel-sdist+oci"
     assert config["publisherAdapter"] == "python-github-release+ghcr"
     assert "npm" not in json.dumps(config).lower()
@@ -57,12 +57,12 @@ def test_release_failures_stop_before_stable(scenario: str) -> None:
 
 
 def test_manifest_verifier_requires_wheel_sdist_and_exact_oci_digest(tmp_path: Path) -> None:
-    wheel = tmp_path / "wsr_evidence-0.1.0-py3-none-any.whl"
-    sdist = tmp_path / "wsr_evidence-0.1.0.tar.gz"
+    wheel = tmp_path / "crystra_evidence-0.1.0-py3-none-any.whl"
+    sdist = tmp_path / "crystra_evidence-0.1.0.tar.gz"
     wheel.write_bytes(b"wheel")
     sdist.write_bytes(b"sdist")
     manifest = {
-        "schemaVersion": "wsr.evidence-release@1.0.0",
+        "schemaVersion": "crystra.evidence-release@1.0.0",
         "version": "0.1.0",
         "ociDigest": "sha256:" + "a" * 64,
         "artifacts": [],
@@ -85,7 +85,7 @@ def test_manifest_verifier_requires_wheel_sdist_and_exact_oci_digest(tmp_path: P
         verify_manifest(tmp_path)
 
 
-def test_workflows_separate_product_authority_from_publisher_and_scope_release_identity() -> None:
+def test_workflows_bind_component_authority_and_scope_release_identity() -> None:
     candidate = (ROOT / ".github/workflows/release-candidate.yml").read_text()
     promote = (ROOT / ".github/workflows/release-promote.yml").read_text()
     ci = (ROOT / ".github/workflows/ci.yml").read_text()
@@ -93,18 +93,17 @@ def test_workflows_separate_product_authority_from_publisher_and_scope_release_i
     image_validator = (ROOT / "release/validate_image_qualification.py").read_text()
     trigger_gate = (ROOT / "release/cli/verify-trigger.sh").read_text()
 
-    assert "repository: firestige/workflow-self-recursive" in candidate
+    assert "authority_manifest" not in candidate
     assert "path: evidence-product" in candidate
-    assert "path: release-publisher" in candidate
-    assert ".evidence.candidate_archive_commit" in candidate
-    assert 'test "$(git -C evidence-product rev-parse HEAD)" = "$PRODUCT_COMMIT"' in candidate
+    assert "path: release-publisher" not in candidate
+    assert "ref: ${{ github.sha }}" in candidate
     assert "evidence.query@0.1.0" in candidate
-    assert 'test "$(jq -r .status' in candidate
-    assert "FROZEN" in candidate
-    assert "RELEASE_TARGET: ${{ steps.authority.outputs.product_commit }}" in candidate
+    assert "contracts/evidence-query test" in candidate
+    assert "CURRENT" in candidate
+    assert "RELEASE_TARGET: ${{ github.sha }}" in candidate
     assert '--target "$RELEASE_TARGET"' in candidate
-    assert '--build-arg "WSR_RELEASE_REVISION=$RELEASE_TARGET"' in candidate
-    assert "WSR_RELEASE_APP_PRIVATE_KEY" in candidate
+    assert '--build-arg "CRYSTRA_RELEASE_REVISION=$RELEASE_TARGET"' in candidate
+    assert "CRYSTRA_RELEASE_APP_PRIVATE_KEY" in candidate
     assert candidate.index("actions/create-github-app-token@") > candidate.index(
         "Run acceptance gates"
     )
@@ -113,7 +112,7 @@ def test_workflows_separate_product_authority_from_publisher_and_scope_release_i
     )
     assert "permission-contents: write" in candidate
     assert "permission-workflows: write" in candidate
-    assert "repositories: wsr-evidence" in candidate
+    assert "repositories: crystra-evidence" in candidate
     release_commands = [
         line
         for line in candidate.splitlines()
@@ -126,8 +125,8 @@ def test_workflows_separate_product_authority_from_publisher_and_scope_release_i
     assert "steps.request.outputs.candidate_tag" in candidate
     assert "docker buildx imagetools inspect" in candidate
     assert "org.opencontainers.image.revision" in image_validator
-    assert "ARG WSR_RELEASE_REVISION" in dockerfile
-    assert "org.opencontainers.image.revision=$WSR_RELEASE_REVISION" in dockerfile
+    assert "ARG CRYSTRA_RELEASE_REVISION" in dockerfile
+    assert "org.opencontainers.image.revision=$CRYSTRA_RELEASE_REVISION" in dockerfile
     assert "workflow_call:" not in candidate
     assert "workflow_dispatch:" not in candidate
     assert "release/cli/verify-trigger.sh" in candidate
@@ -135,10 +134,10 @@ def test_workflows_separate_product_authority_from_publisher_and_scope_release_i
     assert "release_candidate:" not in ci
     assert "uses: ./.github/workflows/release-candidate.yml" not in ci
     assert "actions/create-github-app-token@v3" in promote
-    assert "client-id: ${{ vars.WSR_RELEASE_CLIENT_ID }}" in promote
+    assert "client-id: ${{ vars.CRYSTRA_RELEASE_CLIENT_ID }}" in promote
     assert "app-id:" not in promote
     assert "actions/create-github-app-token@v3" in candidate
-    assert "client-id: ${{ vars.WSR_RELEASE_CLIENT_ID }}" in candidate
+    assert "client-id: ${{ vars.CRYSTRA_RELEASE_CLIENT_ID }}" in candidate
     assert "app-id:" not in candidate
     assert "docker/setup-buildx-action@v4" in candidate
     assert "docker/setup-buildx-action@v3" not in candidate
@@ -146,7 +145,7 @@ def test_workflows_separate_product_authority_from_publisher_and_scope_release_i
         "Verify qualified assets"
     )
     assert "GH_TOKEN: ${{ steps.release-app-token.outputs.token }}" in promote
-    assert "repositories: wsr-evidence" in promote
+    assert "repositories: crystra-evidence" in promote
     assert "permission-contents: write" in promote
     assert "permission-workflows: write" in promote
     promote_release_commands = [
@@ -156,4 +155,4 @@ def test_workflows_separate_product_authority_from_publisher_and_scope_release_i
     ]
     assert promote_release_commands
     assert all('--repo "$GITHUB_REPOSITORY"' in line for line in promote_release_commands)
-    assert "ghcr.io/firestige/wsr-evidence@$OCI_DIGEST" in promote
+    assert "ghcr.io/firestige/crystra-evidence@$OCI_DIGEST" in promote

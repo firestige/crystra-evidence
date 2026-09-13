@@ -1,19 +1,16 @@
-# Evidence release adapter
+# Crystra Evidence release adapter
 
-The repository-local adapter implements the shared `wsr.release-component@1.0.0` lifecycle without selecting npm. It publishes wheel/sdist assets and a digest-bound GHCR image.
-
-Validate locally with one command:
+The component publishes wheel/sdist assets and a digest-bound GHCR image. It retains PostgreSQL and the Evidence Query domain API.
 
 ```sh
 uv run python -m release.cli.release config
+make check
+make integration
+make deployment
 ```
 
-For an RC, first record the immutable Evidence product commit in the superproject unified candidate manifest. The selected superproject authority must also contain the FROZEN `evidence.query@0.1.0` publication record. Then commit `release/request.json` with the RC tag, exact superproject authority commit, and immutable authority manifest, and push the publisher tooling to `release/next`. That push is the only candidate entry point.
+A push to `release/next` qualifies that component commit and its own publisher tools. `release/request.json` supplies the `crystra-evidence-v<version>-rc.N` tag; `config/development-contract.json` supplies the exact independent Contracts input. The current Evidence Query binding and conformance tests replace the historical publication record requirement. No combination checkout or prior combination pin is needed.
 
-The candidate workflow keeps three identities separate:
+The candidate preserves the local acceptance gates, immutable OCI provenance checks, exact Python assets, resumable byte comparisons, and remote download verification. A repository-scoped App token is minted only after qualification for RC creation. Stable promotion remains a human gate and reuses qualified bytes, with tag `crystra-evidence-v<version>`. No old WSR artifact or data migration is supported.
 
-- the superproject authority supplies the FROZEN Contract and unified manifest;
-- the manifest's `evidence.candidate_archive_commit` supplies the wheel, sdist, OCI content, and RC tag target;
-- the `release/next` commit supplies publisher tooling only.
-
-Qualification uses the repository token for read-only GitHub operations and the candidate GHCR push. It mints a repository-scoped GitHub App token only after all local gates and exact artifact checks pass, immediately before creating or resuming the RC. Stable promotion is a separate dispatch after A3 approval and component-first superproject repin; it reuses the qualified OCI digest and also mints the App token only at the final GitHub Release boundary.
+Crystra candidates are not published yet. Repository coordinates, App configuration and the full product installation are completed in the rename plan before candidate publication.

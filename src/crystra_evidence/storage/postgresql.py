@@ -10,14 +10,14 @@ from typing import Any
 from psycopg import AsyncConnection
 from psycopg_pool import AsyncConnectionPool
 
-from wsr_evidence.model import (
+from crystra_evidence.model import (
     Disposition,
     ProjectionConflict,
     ProjectionEffect,
     ProjectionPreconditionFailed,
     ValidatedRecord,
 )
-from wsr_evidence.storage.read_model import StoredEffect
+from crystra_evidence.storage.read_model import StoredEffect
 
 
 def _key_json(key: tuple[Any, ...]) -> str:

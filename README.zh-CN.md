@@ -1,8 +1,8 @@
-# evidence-system
+# Crystra Evidence
 
 [English](README.md) | 中文
 
-evidence-system 是 workflow-self-recursive 的 Evidence System —— 一个可选、可独立部署且仅限 loopback 的数据服务。它接收 Execution 发出的受支持 OTLP 事实，持久化真实可信的因果与事实投影，并通过带版本的只读查询 API 暴露已提交状态，但不控制执行。Evidence 或遥测不可用时，Execution 仍会继续。
+evidence-system 是 Crystra 的 Evidence System —— 一个可选、可独立部署且仅限 loopback 的数据服务。它接收 Execution 发出的受支持 OTLP 事实，持久化真实可信的因果与事实投影，并通过带版本的只读查询 API 暴露已提交状态，但不控制执行。Evidence 或遥测不可用时，Execution 仍会继续。
 
 三个 Module 分离关注点：
 
@@ -14,7 +14,7 @@ evidence-system 是 workflow-self-recursive 的 Evidence System —— 一个可
 
 ## Developer preview
 
-本仓库是 workflow-self-recursive 架构优先开发者预览版的一部分，适用于个人或小团队的可信本地环境。Admission、projection、query、automatic retention 与本地 deployment 均已实现且可测试。**后续会有破坏兼容性的变更。**
+本仓库是 crystra 架构优先开发者预览版的一部分，适用于个人或小团队的可信本地环境。Admission、projection、query、automatic retention 与本地 deployment 均已实现且可测试。**后续会有破坏兼容性的变更。**
 
 ## 开发
 
@@ -37,27 +37,27 @@ make check        # 非容器质量/构建门
 
 ## 获取源码
 
-本仓库通常作为 [workflow-self-recursive](https://github.com/firestige/workflow-self-recursive) 的 submodule 使用：
+本仓库通常作为 [crystra](https://github.com/firestige/crystra) 的 submodule 使用：
 
 ```sh
-git clone --recurse-submodules https://github.com/firestige/workflow-self-recursive.git
+git clone --recurse-submodules https://github.com/firestige/crystra.git
 ```
 
 单独克隆：
 
 ```sh
-git clone https://github.com/firestige/wsr-evidence.git
+git clone https://github.com/firestige/crystra-evidence.git
 ```
 
 ## 文档
 
-- [Evidence System 设计](https://github.com/firestige/workflow-self-recursive/blob/main/docs/systems/evidence/evidence-system.zh-CN.md)
-- [Evidence 实现基线](https://github.com/firestige/workflow-self-recursive/blob/main/docs/systems/evidence/implementation-baseline.zh-CN.md)
+- [Evidence System 设计](https://github.com/firestige/crystra/blob/main/docs/systems/evidence/evidence-system.zh-CN.md)
+- [Evidence 实现基线](https://github.com/firestige/crystra/blob/main/docs/systems/evidence/implementation-baseline.zh-CN.md)
 - [Evidence 本地运维与 retention](docs/operations.zh-CN.md)
-- [概念架构](https://github.com/firestige/workflow-self-recursive/blob/main/docs/agent-architecture.zh-CN.md)
-- [Observation Catalog](https://github.com/firestige/workflow-self-recursive/blob/main/docs/contracts/observation/observation-catalog.zh-CN.md)
-- [OTel Observation Profile](https://github.com/firestige/workflow-self-recursive/blob/main/docs/contracts/observation/otel-observation-profile.zh-CN.md)
-- [Execution–Evidence Interaction Contract](https://github.com/firestige/workflow-self-recursive/blob/main/docs/contracts/execution-evidence/interaction-contract.zh-CN.md)
+- [概念架构](https://github.com/firestige/crystra/blob/main/docs/agent-architecture.zh-CN.md)
+- [Observation Catalog](https://github.com/firestige/crystra/blob/main/docs/contracts/observation/observation-catalog.zh-CN.md)
+- [OTel Observation Profile](https://github.com/firestige/crystra/blob/main/docs/contracts/observation/otel-observation-profile.zh-CN.md)
+- [Execution–Evidence Interaction Contract](https://github.com/firestige/crystra/blob/main/docs/contracts/execution-evidence/interaction-contract.zh-CN.md)
 
 ## License
 

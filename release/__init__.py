@@ -1,1 +1,1 @@
-"""Repository-local release automation; not part of the wsr-evidence wheel."""
+"""Repository-local release automation; not part of the crystra-evidence wheel."""

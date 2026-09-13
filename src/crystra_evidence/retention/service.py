@@ -2,8 +2,8 @@
 
 from __future__ import annotations
 
-from wsr_evidence.clock import Clock, SystemClock
-from wsr_evidence.storage.read_model import (
+from crystra_evidence.clock import Clock, SystemClock
+from crystra_evidence.storage.read_model import (
     DeliveryDeletionResult,
     DeliveryRetentionMaintenance,
     DeliveryRetentionPolicy,
