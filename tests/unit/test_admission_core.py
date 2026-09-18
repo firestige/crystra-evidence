@@ -191,8 +191,19 @@ def test_profile_two_accepts_task_binding_and_requires_direct_delivery_on_every_
             validate_record(task_binding_record(task_id=invalid_task_id))
 
 
-def test_task_binding_family_comes_from_the_manifest_workflow_without_an_allowlist() -> None:
-    validated = validate_record(task_binding_record(workflow_id="hello-world-workflow"))
+@pytest.mark.parametrize("version", ["2.0.0", "2.0.1-rc.1"])
+def test_task_binding_family_comes_from_the_manifest_workflow_without_an_allowlist(
+    version: str,
+) -> None:
+    record = task_binding_record(workflow_id="hello-world-workflow")
+    projection = json.loads(record["attributes"]["agentops.delivery.manifest_projection"])
+    projection["workflow"]["exact_package_version"] = version
+    canonical = canonical_bytes(projection).decode()
+    record["attributes"]["agentops.delivery.manifest_projection"] = canonical
+    record["attributes"]["agentops.delivery.manifest_projection_digest"] = sha256(
+        canonical.encode()
+    ).hexdigest()
+    validated = validate_record(record)
 
     assert validated.attributes["agentops.workflow.family"] == "hello-world-workflow"
     assert validated.attributes["agentops.family.schema"] == "hello-world-workflow@1"

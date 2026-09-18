@@ -275,6 +275,7 @@ NANOSECONDS = re.compile(r"^(0|[1-9][0-9]{0,19})$")
 PREFIXED_DIGEST = re.compile(r"^sha256:[a-f0-9]{64}$")
 PACKAGE_NAME = re.compile(r"^[a-z][a-z0-9-]*$")
 VERSION = re.compile(r"^(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)$")
+PACKAGE_VERSION = re.compile(r"^(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)(?:-[0-9A-Za-z-]+(?:\.[0-9A-Za-z-]+)*)?$")
 PROVIDER_VERSION = re.compile(
     r"^(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)"
     r"(?:-[0-9A-Za-z-]+(?:\.[0-9A-Za-z-]+)*)?"
@@ -495,9 +496,9 @@ def _parse_closed_manifest_projection(attributes: dict[str, Any]) -> dict[str, A
         and PACKAGE_NAME.fullmatch(workflow["package_name"]) is not None,
         "invalid Manifest Package name",
     )
-    for name in ("exact_package_version", "workflow_version"):
+    for name, pattern in (("exact_package_version", PACKAGE_VERSION), ("workflow_version", VERSION)):
         _require(
-            isinstance(workflow[name], str) and VERSION.fullmatch(workflow[name]) is not None,
+            isinstance(workflow[name], str) and pattern.fullmatch(workflow[name]) is not None,
             "invalid Manifest version",
         )
     for name in ("package_digest", "snapshot_digest"):
