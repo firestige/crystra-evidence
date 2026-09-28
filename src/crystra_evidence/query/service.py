@@ -207,10 +207,13 @@ class QueryService:
     ) -> dict[str, Any]:
         normalized, cursor, limit = _normalize(parameters, route="TRACES")
         keys = {name for name, _ in normalized}
-        if ("trace_id" in keys) == ("delivery_id" in keys):
+        if {"trace_id", "delivery_id"}.issubset(keys) or (
+            not {"trace_id", "delivery_id"}.intersection(keys)
+            and not {"recorded_from", "recorded_to"}.issubset(keys)
+        ):
             raise QueryError(
                 QueryErrorCode.INVALID_FILTER,
-                "exactly one trace_id or delivery_id is required",
+                "one exact identity or a bounded recorded interval is required",
             )
         page = await self._page("TRACES", normalized, cursor, limit)
         try:
@@ -241,12 +244,45 @@ class QueryService:
             )
             if response["trace_state"] in {"ABSENT", "EXPIRED"}:
                 response["next_cursor"] = None
+        except SnapshotError as error:
+            await self._release(page.snapshot_id)
+            if error.fault == SnapshotFault.BOUND_EXCEEDED:
+                raise QueryError(QueryErrorCode.QUERY_BOUND_EXCEEDED, str(error)) from error
+            raise QueryError(
+                QueryErrorCode.QUERY_UNAVAILABLE, "Trace snapshot unavailable"
+            ) from error
         except Exception:
             await self._release(page.snapshot_id)
             raise
         if cursor is None and page.next_cursor is None:
             await self._release(page.snapshot_id)
         return response
+
+    async def deliveries(
+        self, parameters: Mapping[str, str] | Sequence[tuple[str, str]]
+    ) -> dict[str, Any]:
+        normalized, cursor, limit = _normalize(parameters, route="DELIVERIES")
+        if not {"recorded_from", "recorded_to"}.issubset(dict(normalized)):
+            raise QueryError(QueryErrorCode.INVALID_FILTER, "directory requires recorded bounds")
+        page = await self._page("DELIVERIES", normalized, cursor, limit)
+        items = []
+        for effect in page.resources:
+            item = dict(effect.payload)
+            item.pop("total", None)
+            if item.pop("trace_count", 0) > 1:
+                await self._release(page.snapshot_id)
+                raise QueryError(QueryErrorCode.QUERY_INTERNAL, "Delivery trace identity conflicts")
+            items.append(item)
+        result = {
+            "contract": {"name": "evidence.delivery-directory", "revision": "1.0.0"},
+            "snapshot": page.snapshot_id,
+            "items": items,
+            "next_cursor": page.next_cursor,
+            "total": page.resources[0].payload["total"] if page.resources else 0,
+        }
+        if cursor is None and page.next_cursor is None:
+            await self._release(page.snapshot_id)
+        return result
 
     async def tasks(
         self, parameters: Mapping[str, str] | Sequence[tuple[str, str]]
@@ -399,8 +435,19 @@ def _normalize(
             "recorded_to",
         }
         if route == "FACTS"
-        else common | {"delivery_id", "trace_id"}
+        else common | {"delivery_id", "trace_id", "recorded_from", "recorded_to"}
         if route == "TRACES"
+        else common
+        | {
+            "recorded_from",
+            "recorded_to",
+            "delivery_id",
+            "task_id",
+            "task_name",
+            "workflow_id",
+            "workflow_version",
+        }
+        if route == "DELIVERIES"
         else common | {"task_id", "as_of"}
     )
     if set(names) - allowed:
@@ -460,6 +507,7 @@ def _validate_filter_values(values: Mapping[str, str], *, route: str) -> None:
             value = values.get(name)
             if value is not None and len(value.encode()) > 256:
                 raise QueryError(QueryErrorCode.INVALID_FILTER, f"{name} is too long")
+    if route in {"FACTS", "TRACES", "DELIVERIES"}:
         lower = _parse_utc(values["recorded_from"]) if "recorded_from" in values else None
         upper = _parse_utc(values["recorded_to"]) if "recorded_to" in values else None
         if (

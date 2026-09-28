@@ -62,3 +62,32 @@ git clone https://github.com/firestige/crystra-evidence.git
 ## License
 
 [Apache-2.0](LICENSE)
+
+### Local recorded-time query candidate (2026-09-28)
+
+`GET /v1/evidence/traces` also accepts a complete `recorded_from` / `recorded_to`
+UTC interval, optionally intersected with one exact Delivery or Trace identity.
+The existing Trace page format, cursor and snapshot behavior are retained. The
+bounds select `recorded_at` (Evidence acceptance/storage time), inclusively;
+native Span start/end times do not select records. Intervals are limited to
+366 days, pages to 200 records, and range summaries to 500 Trace identities.
+Exceeding the latter returns `QUERY_BOUND_EXCEEDED`; results are never silently
+truncated. `/facts` already supports these recorded-time bounds.
+
+This is a local query implementation extension, not a new Observation format
+or a published Contracts revision. Exact identity queries remain supported.
+
+## Local Delivery directory query candidate (2026-09-28)
+
+`GET /v1/evidence/deliveries` requires the existing recorded-time interval
+`recorded_from` / `recorded_to`. Optional exact filters: `delivery_id`, `task_id`,
+`workflow_id`, `workflow_version`; `task_name` is a literal case-insensitive contains
+filter. `limit` / `cursor` use the existing repeatable snapshot mechanism.
+The response contains `contract: {name: "evidence.delivery-directory", revision: "1.0.0"}`,
+`snapshot`, `total`, `items`, `next_cursor`. Each item has `delivery_id`, nullable
+`trace_id`, `task_id`, `task_name`, `workflow_id`, `workflow_version`, `started_at`,
+and the matched `recorded_at`. `total` is counted before pagination under the same
+snapshot. Only metadata is returned, including Deliveries represented by Facts without
+available span rows. Multiple Trace identities for one Delivery are an owner-side error.
+Start time is display metadata, never the selection clock. Existing Observation and
+Contracts schemas are unchanged; this endpoint is a local integration candidate.

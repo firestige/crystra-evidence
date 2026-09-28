@@ -929,3 +929,62 @@ async def test_http_query_is_json_read_only_and_rejects_unknown_filters_and_bodi
     assert repeated_q.status_code == 406
     assert unlisted_method.status_code == 405
     assert unlisted_method.json()["error"]["code"] == "METHOD_NOT_ALLOWED"
+
+
+@pytest.mark.asyncio
+async def test_trace_recorded_range_reuses_page_without_execution_time_filter() -> None:
+    model = FakeReadModel(())
+    response = await QueryService(model).traces(
+        {
+            "recorded_from": "2026-09-01T00:00:00Z",
+            "recorded_to": "2026-09-28T00:00:00Z",
+            "limit": "20",
+        }
+    )
+    assert response["items"] == []
+    assert response["trace_state"] == "ABSENT"
+    assert dict(model.acquired[0][1]) == {
+        "recorded_from": "2026-09-01T00:00:00.000000Z",
+        "recorded_to": "2026-09-28T00:00:00.000000Z",
+        "limit": "20",
+    }
+
+
+@pytest.mark.asyncio
+async def test_exact_trace_can_intersect_recorded_range() -> None:
+    model = FakeReadModel(())
+    await QueryService(model).traces(
+        {
+            "delivery_id": "delivery-a",
+            "recorded_from": "2026-09-01T00:00:00Z",
+            "recorded_to": "2026-09-28T00:00:00Z",
+        }
+    )
+    assert dict(model.acquired[0][1])["delivery_id"] == "delivery-a"
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize(
+    "bounds",
+    [
+        {"recorded_from": "2026-09-01T00:00:00Z"},
+        {"recorded_from": "2026-09-28T00:00:00Z", "recorded_to": "2026-09-01T00:00:00Z"},
+        {"recorded_from": "2024-09-01T00:00:00Z", "recorded_to": "2026-09-01T00:00:00Z"},
+    ],
+)
+async def test_unbounded_or_invalid_global_trace_range_is_rejected(bounds: dict[str, str]) -> None:
+    with pytest.raises(QueryError):
+        await QueryService(FakeReadModel(())).traces(bounds)
+
+
+@pytest.mark.asyncio
+async def test_delivery_directory_requires_range_and_returns_bounded_metadata() -> None:
+    service = QueryService(FakeReadModel(()))
+    with pytest.raises(QueryError):
+        await service.deliveries({})
+    result = await service.deliveries(
+        {"recorded_from": "2026-09-01T00:00:00Z", "recorded_to": "2026-09-28T00:00:00Z"}
+    )
+    assert result["items"] == []
+    assert result["total"] == 0
+    assert result["next_cursor"] is None

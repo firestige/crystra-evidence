@@ -150,7 +150,7 @@ class PostgresQueryReadModel:
         limit: int,
         clock_now: datetime,
     ) -> SnapshotPage[QueryEffect]:
-        if query not in {"FACTS", "TRACES", "TASKS"} or not 1 <= limit <= 200:
+        if query not in {"FACTS", "TRACES", "TASKS", "DELIVERIES"} or not 1 <= limit <= 200:
             raise SnapshotError(SnapshotFault.INVALID, "invalid snapshot query")
         async with self._lease_guard:
             await self._evict_expired(clock_now)
@@ -279,10 +279,13 @@ class PostgresQueryReadModel:
             WHERE {" AND ".join(clauses)}
             GROUP BY trace_id
             ORDER BY trace_id
+            LIMIT 501
         """
         async with lease.lock, lease.connection.cursor() as cursor:
             await cursor.execute(statement, parameters)
             rows = await cursor.fetchall()
+        if len(rows) > 500:
+            raise SnapshotError(SnapshotFault.BOUND_EXCEEDED, "Trace range exceeds 500 summaries")
         return tuple(
             TraceSummary(
                 trace_id=row[0],
@@ -357,6 +360,8 @@ class PostgresQueryReadModel:
     async def _snapshot_rows(
         self, lease: _SnapshotLease, *, after: tuple[Any, ...] | None
     ) -> list[tuple[Any, ...]]:
+        if lease.query == "DELIVERIES":
+            return await self._directory_rows(lease, after=after)
         task_membership = lease.query == "TASKS" and any(
             name == "task_id" for name, _ in lease.filters
         )
@@ -442,6 +447,107 @@ class PostgresQueryReadModel:
             WHERE {" AND ".join(clauses)}
             ORDER BY sort_a, sort_b, sort_c
             LIMIT %s
+        """
+        async with lease.connection.cursor() as cursor:
+            await cursor.execute(statement, parameters)
+            return list(await cursor.fetchall())
+
+    async def _directory_rows(
+        self, lease: _SnapshotLease, *, after: tuple[Any, ...] | None
+    ) -> list[tuple[Any, ...]]:
+        """Project directory metadata before paging; no Trace payload is sent to the UI."""
+        filters = dict(lease.filters)
+        parameters: list[Any] = [filters["recorded_from"], filters["recorded_to"]]
+        predicates = ["delivery_id IS NOT NULL"]
+        for key in ("delivery_id", "task_id", "workflow_id", "workflow_version"):
+            if key in filters:
+                predicates.append(f"{key} = %s")
+                parameters.append(filters[key])
+        if "task_name" in filters:
+            predicates.append("position(lower(%s) in lower(COALESCE(task_name, ''))) > 0")
+            parameters.append(filters["task_name"])
+        continuation = ""
+        if after is not None:
+            continuation = "WHERE (sort_a, sort_b, sort_c) > (%s, %s, %s)"
+            parameters.extend(after)
+        parameters.append(lease.limit + 1)
+        statement = f"""
+        WITH source AS (
+          SELECT pe.*, ar.canonical_digest, ar.profile_version, ar.family_schema,
+            COALESCE(pe.payload->>'delivery_id',
+                     pe.payload#>>'{{attributes,agentops.delivery.id}}',
+                     root.payload->>'delivery_id', guard.effect_key::jsonb->>0) AS delivery_id,
+            COALESCE(CASE WHEN pe.source_identity_kind='span'
+                     THEN pe.source_identity_key::jsonb->>1 END,
+                     pe.payload#>>'{{_otel_context,trace_id}}') AS trace_id,
+            COALESCE(pe.payload#>>'{{attributes,agentops.task.id}}',
+                     guard.payload->>'task_id') AS task_id,
+            COALESCE(pe.payload#>>'{{attributes,agentops.workflow.id}}',
+                     root_node.payload#>>'{{attributes,agentops.workflow.id}}') AS workflow_id,
+            COALESCE(pe.payload#>>'{{attributes,agentops.workflow.version}}',
+                     root_node.payload#>>'{{attributes,agentops.workflow.version}}')
+                     AS workflow_version,
+            COALESCE((root_node.payload->>'start_time_unix_nano')::numeric,
+              CASE WHEN pe.effect_kind='trace_node' THEN
+              (pe.payload->>'start_time_unix_nano')::numeric END) AS start_nano
+          FROM projection_effects pe
+          JOIN accepted_records ar ON ar.identity_kind=pe.source_identity_kind
+            AND ar.identity_key=pe.source_identity_key
+          LEFT JOIN projection_effects root ON root.effect_kind='delivery_root_binding'
+            AND root.effect_key::jsonb->>0=COALESCE(
+              CASE WHEN pe.source_identity_kind='span' THEN pe.source_identity_key::jsonb->>1 END,
+              pe.payload#>>'{{_otel_context,trace_id}}')
+          LEFT JOIN projection_effects root_node ON root_node.effect_kind='trace_node'
+            AND root_node.source_identity_kind=root.source_identity_kind
+            AND root_node.source_identity_key=root.source_identity_key
+          LEFT JOIN projection_effects guard ON guard.effect_kind='delivery_task_guard'
+            AND guard.effect_key::jsonb->>0=COALESCE(pe.payload->>'delivery_id',
+              pe.payload#>>'{{attributes,agentops.delivery.id}}', root.payload->>'delivery_id')
+          WHERE pe.recorded_at >= %s::timestamptz AND pe.recorded_at <= %s::timestamptz
+            AND pe.effect_kind IN ('trace_node','factual_contribution','delivery_root_binding',
+              'delivery_task_guard','finding_assertion','finding_status','role_lineage',
+              'finding_target','finding_fix','finding_recheck','model_attribution')
+            AND NOT EXISTS (SELECT 1 FROM retention_expiry_markers m
+              WHERE m.resource_class IN ('TRACE_DETAIL', 'FACTUAL_PROJECTION')
+                AND m.owner_key=pe.effect_key
+                AND m.resource_kind=COALESCE(({TRACE_PUBLIC_KIND_SQL}), ({FACT_KIND_SQL})))
+        ), grouped AS (
+          SELECT delivery_id, max(recorded_at) AS recorded_at,
+            CASE WHEN count(DISTINCT trace_id)=1 THEN min(trace_id) END AS trace_id,
+            count(DISTINCT trace_id) AS trace_count,
+            CASE WHEN count(DISTINCT task_id)=1 THEN min(task_id) END AS task_id,
+            CASE WHEN count(DISTINCT workflow_id)=1 THEN min(workflow_id) END AS workflow_id,
+            CASE WHEN count(DISTINCT workflow_version)=1 THEN min(workflow_version)
+              END AS workflow_version,
+            min(start_nano) AS start_nano
+          FROM source GROUP BY delivery_id
+        ), named AS (
+          SELECT g.*, display.payload->>'display_name' AS task_name
+          FROM grouped g LEFT JOIN projection_effects display
+            ON display.effect_kind='task_display_name'
+            AND display.effect_key::jsonb->>0=g.task_id
+        ), filtered AS (
+          SELECT *, count(*) OVER () AS total FROM named WHERE {" AND ".join(predicates)}
+        ), ordered AS (
+          SELECT *, -extract(epoch FROM recorded_at) AS sort_a,
+                 delivery_id COLLATE "C" AS sort_b, 0 AS sort_c FROM filtered
+        )
+        SELECT 'delivery_directory', jsonb_build_array(d.delivery_id)::text,
+          jsonb_build_object('delivery_id',d.delivery_id,'trace_id',d.trace_id,
+            'trace_count',d.trace_count,'task_id',d.task_id,'task_name',d.task_name,
+            'workflow_id',d.workflow_id,'workflow_version',d.workflow_version,
+            'started_at',CASE WHEN d.start_nano IS NOT NULL THEN
+                to_char(to_timestamp(d.start_nano/1000000000) AT TIME ZONE 'UTC',
+                  'YYYY-MM-DD"T"HH24:MI:SS.US"Z"') END,
+            'recorded_at',to_char(d.recorded_at AT TIME ZONE 'UTC',
+                  'YYYY-MM-DD"T"HH24:MI:SS.US"Z"'),'total',d.total),
+          witness.source_identity_kind,witness.source_identity_key,d.recorded_at,
+          witness.canonical_digest,witness.profile_version,witness.family_schema,
+          sort_a,sort_b,sort_c
+        FROM (SELECT * FROM ordered {continuation} ORDER BY sort_a,sort_b,sort_c LIMIT %s) d
+        JOIN LATERAL (SELECT * FROM source s WHERE s.delivery_id=d.delivery_id
+          ORDER BY s.recorded_at DESC,s.effect_kind,s.effect_key LIMIT 1) witness ON true
+        ORDER BY sort_a,sort_b,sort_c
         """
         async with lease.connection.cursor() as cursor:
             await cursor.execute(statement, parameters)

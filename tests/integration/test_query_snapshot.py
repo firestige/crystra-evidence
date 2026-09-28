@@ -846,3 +846,112 @@ async def test_database_lifespan_serves_empty_queries_without_leaking_snapshot_c
     assert all(response.status_code == 200 for response in responses)
     assert all(response.json()["items"] == [] for response in responses)
     assert len({response.json()["snapshot"] for response in responses}) == 5
+
+
+@pytest.mark.integration
+@pytest.mark.asyncio
+async def test_global_trace_range_uses_database_recorded_time_and_stable_pages() -> None:
+    database_url = os.environ.get("CRYSTRA_EVIDENCE_DATABASE_URL")
+    if database_url is None:
+        pytest.skip("CRYSTRA_EVIDENCE_DATABASE_URL is not configured")
+    await clear_core(database_url)
+    storage = await PostgresStorage.open(database_url)
+    query_storage = PostgresQueryReadModel.from_storage(storage)
+    admission = AdmissionService(storage)
+    try:
+        for trace_id in ("1" * 32, "2" * 32):
+            assert (
+                await admission.admit(span_record(trace_id, delivery_id=trace_id))
+            ).disposition is Disposition.ACCEPTED
+        async with await psycopg.AsyncConnection.connect(database_url) as connection:
+            await connection.execute(
+                "UPDATE projection_effects SET recorded_at = '2026-09-01T00:00:00Z'"
+            )
+            await connection.execute(
+                "UPDATE projection_effects SET recorded_at = '2026-08-31T23:59:59Z' "
+                "WHERE effect_key::jsonb ->> 0 = %s",
+                ("2" * 32,),
+            )
+        maintenance = PostgresRetentionMaintenance.from_storage(storage)
+        now = datetime.now(UTC)
+        raw = await maintenance.plan_expiry(
+            resource_class=ResourceClass.RAW_DEBUG,
+            policy_revision="1.0.0",
+            cutoff=now,
+            ttl_seconds=0,
+            limit=10,
+        )
+        await maintenance.apply_expiry(batch=raw, clock_now=now)
+        service = QueryService(query_storage)
+        filters = {
+            "recorded_from": "2026-09-01T00:00:00Z",
+            "recorded_to": "2026-09-01T00:00:00Z",
+            "limit": "1",
+        }
+        first = await service.traces(filters)
+        assert first["trace_summaries"] == [{"trace_id": "1" * 32, "state": "AVAILABLE"}]
+        assert first["items"][0]["node"]["start_time_unix_nano"] == "100"
+        assert first["next_cursor"] is not None
+        second = await service.traces({**filters, "cursor": first["next_cursor"]})
+        assert second["snapshot"] == first["snapshot"]
+        assert all(item["trace_id"] == "1" * 32 for item in second["items"])
+    finally:
+        await query_storage.close()
+        await storage.close()
+
+
+@pytest.mark.integration
+@pytest.mark.asyncio
+async def test_delivery_directory_pages_metadata_and_keeps_fact_only_delivery() -> None:
+    database_url = os.environ.get("CRYSTRA_EVIDENCE_DATABASE_URL")
+    if database_url is None:
+        pytest.skip("CRYSTRA_EVIDENCE_DATABASE_URL is not configured")
+    await clear_core(database_url)
+    storage = await PostgresStorage.open(database_url)
+    query_storage = PostgresQueryReadModel.from_storage(storage)
+    admission = AdmissionService(storage)
+    try:
+        for trace_id in ("1" * 32, "2" * 32):
+            assert (
+                await admission.admit(span_record(trace_id, delivery_id=trace_id))
+            ).disposition is Disposition.ACCEPTED
+        async with await psycopg.AsyncConnection.connect(database_url) as connection:
+            await connection.execute(
+                "UPDATE projection_effects SET recorded_at='2026-09-01T00:00:00Z'"
+            )
+            await connection.execute(
+                "DELETE FROM projection_effects WHERE effect_kind LIKE 'trace_%%' "
+                "AND effect_key::jsonb->>0=%s",
+                ("2" * 32,),
+            )
+        maintenance = PostgresRetentionMaintenance.from_storage(storage)
+        now = datetime.now(UTC)
+        raw = await maintenance.plan_expiry(
+            resource_class=ResourceClass.RAW_DEBUG,
+            policy_revision="1.0.0",
+            cutoff=now,
+            ttl_seconds=0,
+            limit=10,
+        )
+        await maintenance.apply_expiry(batch=raw, clock_now=now)
+        service = QueryService(query_storage)
+        filters = {
+            "recorded_from": "2026-09-01T00:00:00Z",
+            "recorded_to": "2026-09-01T00:00:00Z",
+            "limit": "1",
+        }
+        first = await service.deliveries(filters)
+        assert first["total"] == 2
+        assert len(first["items"]) == 1
+        assert "node" not in first["items"][0]
+        second = await service.deliveries({**filters, "cursor": first["next_cursor"]})
+        assert second["snapshot"] == first["snapshot"]
+        assert second["items"][0]["delivery_id"] == "2" * 32
+        assert second["items"][0]["started_at"] is None
+        assert second["next_cursor"] is None
+        selected = await service.deliveries({**filters, "delivery_id": "2" * 32})
+        assert selected["total"] == 1
+        assert selected["items"][0]["trace_id"] == "2" * 32
+    finally:
+        await query_storage.close()
+        await storage.close()

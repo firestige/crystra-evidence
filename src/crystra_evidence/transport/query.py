@@ -103,6 +103,18 @@ def create_query_router() -> APIRouter:
         except Exception:
             return _error(QueryError(QueryErrorCode.QUERY_INTERNAL, "query failed safely"))
 
+    @router.get("/v1/evidence/deliveries")
+    async def deliveries(request: Request) -> JSONResponse:
+        try:
+            service = await _prepare(request)
+            return JSONResponse(
+                content=await service.deliveries(list(request.query_params.multi_items()))
+            )
+        except QueryError as error:
+            return _error(error)
+        except Exception:
+            return _error(QueryError(QueryErrorCode.QUERY_INTERNAL, "query failed safely"))
+
     @router.get("/v1/evidence/tasks")
     async def tasks(request: Request) -> JSONResponse:
         try:
@@ -132,6 +144,7 @@ def create_query_router() -> APIRouter:
         "/v1/evidence/facts",
         "/v1/evidence/traces",
         "/v1/evidence/tasks",
+        "/v1/evidence/deliveries",
         "/v1/evidence/manifests",
     ):
         router.add_api_route(
